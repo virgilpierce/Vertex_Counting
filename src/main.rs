@@ -43,6 +43,10 @@ fn check_connected(edge_map: &PermutationStructure) -> bool {
 			// Mark vertex v as checked
 			vertex[v] = 2;
 
+
+			// Mark all vertices reachable from v as visited. 
+			// Note that the number of vertices compared to the number of edges
+			// is always smaller, roughly be a factor of the average degree.
 			for idx in 0..VERTEX_MAP[v].len() {
 				let a = (*VERTEX_MAP[v])[idx];
 				let a2 = edge_map.out[a];
@@ -69,6 +73,7 @@ fn check_connected(edge_map: &PermutationStructure) -> bool {
 	}
 
 
+	// Chekc if we visited every vertex.
 	if is_in_array(0, &vertex) {
 		return false;
 	} else {
@@ -78,6 +83,12 @@ fn check_connected(edge_map: &PermutationStructure) -> bool {
 }
 
 fn convert_vertex_map() -> PermutationStructure {
+	// The function converts the cycle permutation notation of const VERTEX_MAP 
+	// into the permutation notation using for edge_map. This makes taking the 
+	// composition of vertex_map and edge_map for finding faces easier to write.
+
+	// Only needs to run once when initializing vertex_map in fn main.
+
 	let mut ans = PermutationStructure	{
 		out: [0; ARROWS],
 	};
@@ -113,10 +124,10 @@ fn convert_vertex_map() -> PermutationStructure {
 
 }
 
-
-
-
 fn product_permute(edge_map: &PermutationStructure, vertex_map: &PermutationStructure) -> PermutationStructure {
+
+	// Computes the compsition of two permutations.
+
 	let mut ans = PermutationStructure {
 		out: [0; ARROWS],
 	};
@@ -129,6 +140,10 @@ fn product_permute(edge_map: &PermutationStructure, vertex_map: &PermutationStru
 }
 
 fn face_count(permute: PermutationStructure) -> usize {
+
+	// counts the number of faces in a ribbon graph.
+
+
 	let mut ans = 0;
 
 	// travel represents each arrow in the graph;
@@ -138,6 +153,9 @@ fn face_count(permute: PermutationStructure) -> usize {
 	let mut travel = [false; ARROWS];
 
 	loop {
+
+		// find an unused value in the permutation
+
 		let mut a: usize = 0;
 		while travel[a] {
 			a += 1;
@@ -147,6 +165,9 @@ fn face_count(permute: PermutationStructure) -> usize {
 		}
 
 		if a < travel.len() {
+
+			// follow a value throuhg the permutation until we complete a cycle.
+
 			let mut p = a;
 
 			while !(travel[p]) {
@@ -154,6 +175,7 @@ fn face_count(permute: PermutationStructure) -> usize {
 				p = permute.out[p];
 
 				if p == a {
+					// once the cycle is complete, increment our count.
 					ans += 1;
 					break;
 				} 
@@ -172,6 +194,10 @@ fn face_count(permute: PermutationStructure) -> usize {
 }
 
 fn count(genus: &mut [usize], edge_map: &PermutationStructure, vertex_map: &PermutationStructure) {
+
+	// check for a connected graph;
+	// Compute the genus and then increment that count in the genus array.
+
 	if check_connected(edge_map) {
 		let faces: isize = face_count(product_permute(edge_map, vertex_map)) as isize;
 		let edges: isize = (ARROWS / 2) as isize;
@@ -186,6 +212,8 @@ fn count(genus: &mut [usize], edge_map: &PermutationStructure, vertex_map: &Perm
 // -------------------------------------------------------------------------
 // Now for the real meat of the program. The following functions set up a nesting
 // procedure for cycling through all possible choices for edge_map. 
+// Note that this is the set of all Wick Pairings and the number we will find is
+// (2*ARROWS - 1)!!
 
 fn nest2(nest_count: usize, which: &PermutationStructure, chooser: &mut PermutationStructure, 
 	edge_map: &mut PermutationStructure, vertex_map: & PermutationStructure, 
